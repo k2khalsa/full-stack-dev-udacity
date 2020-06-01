@@ -9,10 +9,9 @@ block content %}
       ID: {{ venue.id }}
     </p>
     <div class="genres">
-      {% if venue.genres and venue.genres|length > 0 %} {% for genre in
-      venue.genres %}
+      {% if venue.genres and venue.genres|length > 0 %}{% for genre in venue.genres %}
       <span class="genre">{{ genre }}</span>
-      {% endfor %} {% else %} No Genre {% endif %}
+      {% endfor %}{% else %} No Genre {% endif %}
     </div>
     <p>
       <i class="fas fa-globe-americas"></i> {{ venue.city }}, {{ venue.state }}
