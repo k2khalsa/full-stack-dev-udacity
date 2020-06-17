@@ -1,4 +1,5 @@
 import os
+import sys
 from flask import Flask, request, abort, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -12,15 +13,15 @@ QUESTIONS_PER_PAGE = 10
 
 def random_question(archived_questions):
     # returns new random question from list of all questions
-    question_count = Question.query.count()
+    all_questions_query = Question.query.all()
+    all_question_query_count = Question.query.count()
 
-    if len(archived_questions) == question_count:
+    if len(archived_questions) == all_question_query_count:
         return None
 
     while True:
-        # using 5 and +5 because questions.id starts at 5 and not 0
-        random_id = random.randint(5, question_count+5)
-        random_question = Question.query.get(random_id)
+        random_question = all_questions_query[random.randrange(
+            0, all_question_query_count, 1)]
 
         if random_question.id in archived_questions:
             continue
@@ -31,6 +32,8 @@ def random_question(archived_questions):
 def random_question_w_category(category, archived_questions):
     # returns new random question from list of all questions based on category given
     questions_category = Question.query.filter_by(category=category).all()
+    if len(questions_category) == 0:
+        abort(404)
     max_count = len(questions_category)
 
     if len(archived_questions) == max_count:
@@ -196,6 +199,8 @@ def create_app(test_config=None):
         try:
             questions_query = Question.query.filter(
                 Question.category == category_id).all()
+            if len(questions_query) == 0:
+                abort(422)
             questions = paginate_questions(request, questions_query)
 
             return jsonify({
@@ -214,12 +219,12 @@ def create_app(test_config=None):
         archived_questions = body.get('previous_questions')
 
         try:
-            if category['id'] == 0:
-                question = random_question(archived_questions)
-
-            else:
+            if int(category['id']) > 0:
                 question = random_question_w_category(
                     category['id'], archived_questions)
+
+            else:
+                question = random_question(archived_questions)
 
             return jsonify({
                 'success': True,
